@@ -1,0 +1,44 @@
+# docker-compose.yml
+
+version: '3.8'
+
+volumes:
+  vol_template:
+    driver: local
+
+services:
+  web:
+    build:
+      context: .
+    container_name: "srvpy-template"
+    command: bash -c "alembic upgrade head && uvicorn main:app --host=0.0.0.0 --reload"
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=template
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - .:/app
+    ports:
+      - 8000:8000
+    networks:
+      - template
+    depends_on:
+      - db
+  db:
+    image: "postgres"
+    container_name: "srvdb-template"
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=template
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - vol_template:/var/lib/postgresql/data
+    networks:
+      - template
+networks:
+  template:
+    driver: bridge
